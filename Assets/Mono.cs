@@ -3,6 +3,7 @@ using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
+using VRC.Udon.Common;
 
 public class Mono : UdonSharpBehaviour {
 	VRCPlayerApi playerApi;
@@ -10,81 +11,10 @@ public class Mono : UdonSharpBehaviour {
 		playerApi = Networking.LocalPlayer;
 	}
 
-	[Header("input")]
-	[SerializeField] Vector3 vTo = Vector3.right;
-	[SerializeField] Vector3 vFrom = Vector3.left; 
-
-	[Header("data")]
-	[SerializeField] Vector3 cursorPos = Vector3.zero;
-	[SerializeField] Quaternion cursorRot = Quaternion.identity;
-
-	[SerializeField] bool stuck = false;
-	[SerializeField] Vector3 stuckPos = Vector3.zero;
-
 	void Update() {
-		if (playerApi == null) return; // ?
-
-		if (playerApi.IsUserInVR() && playerApi.isLocal) { // ?
-			vTo = playerApi.GetBonePosition(HumanBodyBones.LeftHand);
-			vFrom = playerApi.GetBonePosition(HumanBodyBones.RightHand);
-
-			Vector3 delta = vTo - vFrom;
-			float mag = delta.magnitude;
-			float stretch = Mathf.Max(mag - deadzone, 0);
-			
-			Vector3 dir = delta.normalized;
-			cursorPos = vTo + dir * stretch * strength;
-
-			cursorRot = playerApi.GetBoneRotation(HumanBodyBones.RightHand);
-
-			if (cursorPos.y < 0) {
-				Debug.Log("below");
-
-				// doing a raycast back to the entry point would give us a better vector?
-				if (!stuck) {
-					RaycastHit hit;
-					if (Physics.Raycast(
-						cursorPos, Custom.Direction(oldCursorPos, cursorPos), out hit, 
-						1024f, LayerMask.GetMask("Default")
-					)) {
-						stuckPos = hit.point;
-						stuck = true;
-						Debug.Log("stuck");
-					}
-				}
-				
-				if (stuck) {
-					Vector3 vel = playerApi.GetVelocity();
-					playerApi.SetVelocity(vel + (stuckPos - cursorPos));
-					// oldPos = back;
-					// stuck = false;
-				}
-			} else {
-				stuck = false;
-			}
-		}
-
-
-
-		// draw
-		gameObject.DrawIn("cursor", cursorPos, cursorRot, 1f);
-		gameObject.DrawIn("stuck", stuckPos, Quaternion.identity, 1f, stuck);
-
-
 		gameObject.DrawIn("ship", new Vector3(Mathf.Sin(Time.time) * 0.333f, 0.666f, 0));
-		
-
-		// update
-		oldCursorPos = cursorPos;
 	}
-	Vector3 oldCursorPos = Vector3.zero;
-
-	[Header("design")]
-	[SerializeField] float deadzone = 0.1f;
-	[SerializeField] float strength = 6f;
 }
-
-
 
 public static class Custom {
 	public static Vector3 Direction(Vector3 to, Vector3 from) {
@@ -139,9 +69,9 @@ public static class Custom {
 
 
 	stretch silo
-	is the chill one to start out with
-	as co-op fixes the range of vision issue
-	and vs is fun too *like battleship
+		is the chill one to start out with
+		as co-op fixes the range of vision issue
+		and vs is fun too *like battleship
 	
 	you are based somewhere in the city/county
 	and you can move strategically in order to minimize risk
@@ -167,13 +97,22 @@ public static class Custom {
 
 
 
+	bending
+		almost all the bending stuff makes use of fbt
+		so just embrace that?
 
-	almost all the bending stuff makes use of fbt
-	so just embrace that?
+		even with air bending, when you move your body light as a feather
+		you are *resonating with the air around you
 
-	even with air bending, when you move your body light as a feather
-	you are *resonating with the air around you
+		the fucking hard part is the minds eye stuff
+		how do you make that happen in vr with current tech?
 
-	the fucking hard part is the minds eye stuff
-	how do you make that happen in vr with current tech?
+	start with air
+		it's *always right around you
+		the visuals can be subtle
+
+		staff seems important
+
+		just have a gameobject pool of air that keeps respawning back around you
+		
 */
